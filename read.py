@@ -34,6 +34,13 @@ with open(data_file,encoding="utf-8") as f:
         i += 1
         if (i >= 10000):
             break
+lin_num = 0
+with open(data_file,encoding="utf-8") as f:
+    for line in f:
+        q_id = int(line.strip().lower().split("\t")[0].strip())
+        lin_num += 1
+        if q_id == 406184:
+            print(lin_num)
 
 with open(sample_data_file, 'w', encoding="utf-8") as f:
     for item in sample_list:
@@ -43,20 +50,44 @@ with open(sample_data_file, 'w', encoding="utf-8") as f:
 # data =   pd.read_csv(data_file,sep = '\t')
 # sample_df = data.iloc[0:5]
 # =============================================================================
+
+######## This part of code is to create training an validation set.
 train_list= list()
 test_list = list()
 old_q_id = -1
 q_no = 0
+ans_num = 0
+is_test = False
+is_train = False
+train_dict_q = {}
+test_dict_q = {}
 with open(data_file,encoding="utf-8") as f:
     for line in f:
-        q_id = line.strip().lower().split("\t")[0]
-        if (old_q_id != q_id):
+        q_id = int(line.strip().lower().split("\t")[0].strip())
+        ans_num += 1
+        if (old_q_id != q_id) and (q_id not in train_dict_q) and (q_id not in test_dict_q):
+            if ans_num < 10:
+                print("old question id: %d new question id: %d and number of answers: %d"\
+                      %(old_q_id,q_id,ans_num))
+                if is_train:
+                    train_dict_q[old_q_id] = train_dict_q.get(old_q_id, 0) + ans_num
+                if is_test:
+                    test_dict_q[old_q_id] = test_dict_q.get(old_q_id, 0) + ans_num
             q_no += 1
             old_q_id = q_id
-        if (q_no % 10 == 0):
+            ans_num = 0
+        if (q_id in test_dict_q) or ((q_id not in train_dict_q) and (q_no % 10 == 0)):
             test_list.append(line)
+            is_test = True
+            is_train = False
+            if q_id in test_dict_q:
+                test_dict_q[q_id] +=1
         else:
             train_list.append(line)
+            is_test = False
+            is_train = True
+            if q_id in train_dict_q:
+                train_dict_q[q_id] +=1
 print("total number of queries:", q_no)
 
 with open(trainFileName, 'w', encoding="utf-8") as f:
