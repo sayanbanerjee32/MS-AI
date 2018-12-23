@@ -24,6 +24,9 @@ from nltk.util import ngrams
 docIDFDict = {}
 avgDocLength = 0
 
+idf_file_name = 'docIDFDict_ngram.pickle'
+doc_length_file_name = 'avgDocLength_ngram.pickle'
+
 
 def GetCorpus(inputfile,corpusfile):
     f = open(inputfile,"r",encoding="utf-8")
@@ -93,7 +96,7 @@ def tokenise_word(line,is_trigram = False,is_lemma = False):
 # IDF(q_i) = log((N-n(q_i)+0.5)/(n(q_i)+0.5)) where N is the total number of documents in the collection and n(q_i) is the number of documents containing q_i
 # After finding IDF scores for all the words, The IDF dictionary will be saved in "docIDFDict.pickle" file in the current directory
 
-def IDF_Generator(corpusfile, delimiter=' ', base=math.e, min_doc = 100) :
+def IDF_Generator(corpusfile, delimiter=' ', base=math.e, min_doc = 5) :
 
     global docIDFDict,avgDocLength
 
@@ -103,7 +106,7 @@ def IDF_Generator(corpusfile, delimiter=' ', base=math.e, min_doc = 100) :
 
     for line in open(corpusfile,"r",encoding="utf-8") :
         #doc = line.strip().split(delimiter)
-        doc = tokenise_word(line)
+        doc = tokenise_word(line, False, False)
         totalDocLength += len(doc)
 
         doc = list(set(doc)) # Take all unique words
@@ -131,11 +134,11 @@ def IDF_Generator(corpusfile, delimiter=' ', base=math.e, min_doc = 100) :
 
 
     
-    pickle_out = open("docIDFDict_ngram.pickle","wb") # Saves IDF scores in pickle file, which is optional
+    pickle_out = open(idf_file_name,"wb") # Saves IDF scores in pickle file, which is optional
     pickle.dump(docIDFDict, pickle_out)
     pickle_out.close()
 
-    with open("avgDocLength_ngram.pickle", "wb") as avgDocLength_file:
+    with open(doc_length_file_name, "wb") as avgDocLength_file:
         pickle.dump(avgDocLength, avgDocLength_file)
     
     print("NumOfDocuments : ", numOfDocuments)
@@ -150,8 +153,8 @@ def GetBM25Score(Query, Passage, k1=1.5, b=0.75, delimiter=' ') :
 
     #query_words= Query.strip().lower().split(delimiter)
     #passage_words = Passage.strip().lower().split(delimiter)
-    query_words= tokenise_word(Query)
-    passage_words = tokenise_word(Passage)
+    query_words= tokenise_word(Query, False, False)
+    passage_words = tokenise_word(Passage, False, False)
     passageLen = len(passage_words)
     docTF = {}
     for word in set(query_words):   #Find Term Frequency of all query unique words
@@ -249,10 +252,10 @@ if __name__ == '__main__' :
     valOutputFile = "D:/Data Science/MS_AI_Challenge/interim/val_output.tsv"
     outputFileName = "D:/Data Science/MS_AI_Challenge/output/answer.tsv"
     
-    with open("docIDFDict.pickle", "rb") as idf_file:
+    with open(idf_file_name, "rb") as idf_file:
         docIDFDict = pickle.load(idf_file)
         
-    with open("avgDocLength.pickle", "rb") as avgDocLength_file:
+    with open(doc_length_file_name, "rb") as avgDocLength_file:
         avgDocLength = pickle.load(avgDocLength_file)
     #GetCorpus(inputFileName,corpusFileName)    # Gets all the passages(docs) and stores in corpusFile. you can comment this line if corpus file is already generated
 # =============================================================================
